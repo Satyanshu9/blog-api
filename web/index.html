@@ -602,7 +602,7 @@
   async function refreshAll(){
     const connected = await checkConnection();
     if (!connected){
-      $('post-list').innerHTML = "<div class=\\"empty\\">Can't reach the API. Check the address above and hit Connect.</div>";
+      $('post-list').innerHTML = `<div class="empty">Can't reach the API. Check the address above and hit Connect.</div>`;
       $('stats-wrap').innerHTML = '<div class="empty">—</div>';
       return;
     }
