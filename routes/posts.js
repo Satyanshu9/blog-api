@@ -1,17 +1,20 @@
 const express = require("express");
 const router = express.Router();
 const Post = require("../models/Post");
+const requireAuth = require("../middleware/auth");
 
-// Create post
-router.post("/", async (req, res) => {
+// Create post — now requires login
+router.post("/", requireAuth, async (req, res) => {
   try {
-    const post = await Post.create(req.body);
+    const post = await Post.create({
+      ...req.body,
+      author: req.userId   // no longer trusting a client-supplied author field!
+    });
     res.status(201).json(post);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
-
 // List posts — with optional ?author=id filter
 router.get("/", async (req, res) => {
   const filter = {};
