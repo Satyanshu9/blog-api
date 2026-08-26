@@ -300,6 +300,54 @@
     .topbar{ flex-wrap:wrap; }
     .base-url{ order:3; max-width:none; width:100%; }
   }
+
+  /* ---------- Auth ---------- */
+  .account-chip{
+    display:flex; align-items:center; gap:8px;
+    background: var(--surface); border:1px solid var(--line); border-radius: 999px;
+    padding: 5px 14px 5px 6px; cursor:pointer; box-shadow: var(--shadow-sm);
+    transition: box-shadow .15s;
+  }
+  .account-chip:hover{ box-shadow: var(--shadow-md); }
+  .account-chip .avatar{
+    width:24px; height:24px; border-radius:50%;
+    background: linear-gradient(160deg, var(--rose), var(--honey));
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:700; font-size:11px; font-family:'Fraunces'; flex-shrink:0;
+  }
+  .account-chip span{ font-size:12.5px; font-weight:700; color:var(--text); }
+
+  .modal-overlay{
+    position: fixed; inset:0; background: rgba(74,60,42,0.32);
+    z-index: 40; display:none; align-items:center; justify-content:center;
+    backdrop-filter: blur(3px); padding: 20px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-box{
+    background: var(--bg); border:1px solid var(--line); border-radius: var(--radius-lg);
+    width: 100%; max-width: 380px; box-shadow: var(--shadow-md);
+    padding: 26px 26px 22px;
+  }
+  .modal-box h2{ font-size:22px; margin-bottom:4px; }
+  .modal-sub{ font-size:12.5px; color:var(--text-muted); margin-bottom:18px; }
+  .modal-close{
+    float:right; background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer;
+  }
+  .auth-tabs{ display:flex; gap:6px; margin-bottom:18px; background: var(--surface-soft); padding:4px; border-radius:999px; }
+  .auth-tab{
+    flex:1; text-align:center; padding:7px 0; border-radius:999px; font-size:12.5px; font-weight:700;
+    color: var(--text-muted); cursor:pointer; transition: all .15s;
+  }
+  .auth-tab.active{ background: var(--sage); color:#fff; }
+  .auth-panel{ display:none; }
+  .auth-panel.active{ display:block; }
+  .account-panel-body{ font-size:13.5px; color:var(--text-muted); }
+  .account-panel-body .name{ font-size:17px; font-weight:600; color:var(--text); font-family:'Fraunces'; margin-bottom:2px; }
+  .locked-note{
+    font-size:12.5px; color:var(--text-dim); background: var(--surface-soft);
+    border:1px dashed var(--line); border-radius: var(--radius-md); padding:12px 14px; margin-bottom:16px;
+  }
+  .locked-note button{ background:none; border:none; color:var(--sage-deep); font-weight:700; cursor:pointer; padding:0; font-size:inherit; text-decoration:underline; }
 </style>
 </head>
 <body>
@@ -316,6 +364,7 @@
     <button id="connect-btn">Connect</button>
   </div>
   <div class="status-label"><span class="status-dot pending" id="status-dot"></span><span id="status-label">connecting…</span></div>
+  <div id="account-area"></div>
 </div>
 
 <div class="layout">
@@ -338,13 +387,8 @@
         <div class="field"><label>Title</label><input id="new-post-title" placeholder="On calibration drift"></div>
       </div>
       <div class="field" style="margin-bottom:12px;"><label>Body</label><textarea id="new-post-body" placeholder="Write the post…"></textarea></div>
-      <div class="row">
-        <div class="field">
-          <label>Author</label>
-          <select id="new-post-author"><option value="">— select someone —</option></select>
-        </div>
-        <div class="field"><label>Tags (comma separated)</label><input id="new-post-tags" placeholder="intro, notes"></div>
-      </div>
+      <div class="field" style="margin-bottom:12px;"><label>Tags (comma separated)</label><input id="new-post-tags" placeholder="intro, notes"></div>
+      <div style="font-size:12px; color:var(--text-dim); margin-bottom:6px;">Posting as <b id="posting-as-name" style="color:var(--sage-deep);"></b></div>
       <div class="form-error" id="new-post-error"></div>
       <div class="form-actions">
         <button class="ghost-btn" id="cancel-post-btn">Cancel</button>
@@ -381,19 +425,12 @@
       </div>
     </div>
 
-    <h3 class="side-title">People</h3>
-    <div class="form-card">
-      <div class="row">
-        <div class="field"><label>Name</label><input id="new-user-name" placeholder="Ada"></div>
-      </div>
-      <div class="field" style="margin-bottom:12px;"><label>Email</label><input id="new-user-email" placeholder="ada@example.com"></div>
-      <div class="form-error" id="new-user-error"></div>
-      <div class="form-actions">
-        <button class="solid-btn" id="submit-user-btn" style="width:100%;">+ Add person</button>
-      </div>
+    <h3 class="side-title">Account</h3>
+    <div class="form-card" id="account-panel">
+      <div class="locked-note">Not logged in. <button id="open-login-link">Log in or sign up</button> to write posts and comments.</div>
     </div>
-    <div id="user-list"></div>
   </div>
+
 </div>
 
 <div class="overlay" id="overlay"></div>
@@ -408,6 +445,33 @@
   <div class="drawer-body" id="drawer-body"></div>
 </div>
 
+<div class="modal-overlay" id="auth-overlay">
+  <div class="modal-box">
+    <button class="modal-close" id="auth-modal-close">&times;</button>
+    <h2>Welcome</h2>
+    <div class="modal-sub">Log in or create an account to write.</div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" data-tab="login">Log in</div>
+      <div class="auth-tab" data-tab="register">Sign up</div>
+    </div>
+
+    <div class="auth-panel active" id="login-panel">
+      <div class="field" style="margin-bottom:12px;"><label>Email</label><input id="login-email" placeholder="ada@example.com"></div>
+      <div class="field" style="margin-bottom:14px;"><label>Password</label><input id="login-password" type="password" placeholder="••••••••"></div>
+      <div class="form-error" id="login-error"></div>
+      <button class="solid-btn" id="login-btn" style="width:100%; margin-top:6px;">Log in</button>
+    </div>
+
+    <div class="auth-panel" id="register-panel">
+      <div class="field" style="margin-bottom:12px;"><label>Name</label><input id="register-name" placeholder="Ada"></div>
+      <div class="field" style="margin-bottom:12px;"><label>Email</label><input id="register-email" placeholder="ada@example.com"></div>
+      <div class="field" style="margin-bottom:14px;"><label>Password</label><input id="register-password" type="password" placeholder="At least 6 characters"></div>
+      <div class="form-error" id="register-error"></div>
+      <button class="solid-btn" id="register-btn" style="width:100%; margin-top:6px;">Create account</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -416,6 +480,8 @@
   let users = [];
   let posts = [];
   let requestCount = 0;
+  let token = null;
+  let currentUser = null;
 
   const $ = (id) => document.getElementById(id);
   const consoleLog = $('console-log');
@@ -451,9 +517,12 @@
     const start = performance.now();
     let res, data, ok, status;
     try{
+      const headers = {};
+      if (body) headers['Content-Type'] = 'application/json';
+      if (token) headers['Authorization'] = 'Bearer ' + token;
       res = await fetch(API_BASE + path, {
         method,
-        headers: body ? {'Content-Type':'application/json'} : undefined,
+        headers: Object.keys(headers).length ? headers : undefined,
         body: body ? JSON.stringify(body) : undefined
       });
       status = res.status;
@@ -467,7 +536,15 @@
     }
     const ms = Math.round(performance.now() - start);
     logRequest(method, path, status, ms, ok);
-    if (!ok) throw Object.assign(new Error((data && data.error) || 'Request failed'), {data, status});
+    if (!ok){
+      if (status === 401 && token){
+        // our token is invalid/expired — clear the stale session
+        token = null;
+        currentUser = null;
+        renderAccountArea();
+      }
+      throw Object.assign(new Error((data && data.error) || 'Request failed'), {data, status});
+    }
     return data;
   }
 
@@ -504,25 +581,122 @@
     return Math.floor(h/24) + 'd ago';
   }
 
-  function renderUserSelects(){
-    const opts = '<option value="">— select someone —</option>' + users.map(u => `<option value="${u._id}">${escapeHtml(u.name)}</option>`).join('');
-    $('new-post-author').innerHTML = opts;
+  // --- Auth UI rendering ---
+  function renderAccountArea(){
+    const area = $('account-area');
+    if (currentUser){
+      area.innerHTML = `
+        <div class="account-chip" id="account-chip-btn">
+          <div class="avatar">${escapeHtml(currentUser.name.charAt(0).toUpperCase())}</div>
+          <span>${escapeHtml(currentUser.name)}</span>
+        </div>
+      `;
+      $('account-chip-btn').onclick = () => { logout(); };
+      $('account-chip-btn').title = 'Click to log out';
+    } else {
+      area.innerHTML = `<button class="solid-btn" id="account-login-btn">Log in</button>`;
+      $('account-login-btn').onclick = openAuthModal;
+    }
+    renderAccountPanel();
+    renderPostingGate();
   }
 
-  function renderUserList(){
-    const wrap = $('user-list');
-    if (!users.length){ wrap.innerHTML = '<div class="empty" style="margin-top:12px;">No one yet.</div>'; return; }
-    wrap.innerHTML = users.map(u => `
-      <div class="user-row">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <div class="user-avatar">${escapeHtml((u.name||'?').charAt(0).toUpperCase())}</div>
-          <div>
-            <div style="font-size:13.5px; font-weight:600;">${escapeHtml(u.name)}</div>
-            <div style="font-size:11.5px; color:var(--text-dim);">${escapeHtml(u.email)}</div>
-          </div>
+  function renderAccountPanel(){
+    const panel = $('account-panel');
+    if (currentUser){
+      panel.innerHTML = `
+        <div class="account-panel-body">
+          <div class="name">${escapeHtml(currentUser.name)}</div>
+          <div style="margin-bottom:14px;">${escapeHtml(currentUser.email)}</div>
+          <button class="ghost-btn" id="logout-btn" style="width:100%;">Log out</button>
         </div>
-      </div>
-    `).join('');
+      `;
+      $('logout-btn').onclick = logout;
+    } else {
+      panel.innerHTML = `<div class="locked-note">Not logged in. <button id="open-login-link">Log in or sign up</button> to write posts and comments.</div>`;
+      $('open-login-link').onclick = openAuthModal;
+    }
+  }
+
+  function renderPostingGate(){
+    const btn = $('new-post-btn');
+    if (currentUser){
+      btn.disabled = false;
+      btn.title = '';
+      const nameEl = $('posting-as-name');
+      if (nameEl) nameEl.textContent = currentUser.name;
+    } else {
+      btn.disabled = true;
+      btn.title = 'Log in to write a post';
+    }
+  }
+
+  function openAuthModal(){
+    $('auth-overlay').classList.add('open');
+  }
+  function closeAuthModal(){
+    $('auth-overlay').classList.remove('open');
+    $('login-error').textContent = '';
+    $('register-error').textContent = '';
+  }
+
+  async function login(){
+    const email = $('login-email').value.trim();
+    const password = $('login-password').value;
+    $('login-error').textContent = '';
+    if (!email || !password){
+      $('login-error').textContent = 'Email and password are required.';
+      return;
+    }
+    try{
+      const data = await api('POST', '/users/login', { email, password });
+      token = data.token;
+      currentUser = data.user;
+      closeAuthModal();
+      $('login-email').value = '';
+      $('login-password').value = '';
+      toast(`Welcome back, ${currentUser.name} 🌿`);
+      renderAccountArea();
+    } catch(e){
+      $('login-error').textContent = e.message;
+    }
+  }
+
+  async function register(){
+    const name = $('register-name').value.trim();
+    const email = $('register-email').value.trim();
+    const password = $('register-password').value;
+    $('register-error').textContent = '';
+    if (!name || !email || !password){
+      $('register-error').textContent = 'All fields are required.';
+      return;
+    }
+    if (password.length < 6){
+      $('register-error').textContent = 'Password should be at least 6 characters.';
+      return;
+    }
+    try{
+      await api('POST', '/users/register', { name, email, password });
+      // auto-login right after registering
+      const data = await api('POST', '/users/login', { email, password });
+      token = data.token;
+      currentUser = data.user;
+      closeAuthModal();
+      $('register-name').value = '';
+      $('register-email').value = '';
+      $('register-password').value = '';
+      toast(`Welcome, ${currentUser.name} 🌿`);
+      renderAccountArea();
+    } catch(e){
+      $('register-error').textContent = e.message;
+    }
+  }
+
+  function logout(){
+    token = null;
+    currentUser = null;
+    renderAccountArea();
+    toast('Logged out');
   }
 
   function escapeHtml(str){
@@ -552,14 +726,6 @@
     list.querySelectorAll('.post-card').forEach(card => {
       card.onclick = () => openPost(card.dataset.id);
     });
-  }
-
-  async function loadUsers(){
-    try{
-      users = await api('GET', '/users');
-      renderUserSelects();
-      renderUserList();
-    } catch(e){ /* handled by connection status */ }
   }
 
   async function loadPosts(){
@@ -606,11 +772,12 @@
       $('stats-wrap').innerHTML = '<div class="empty">—</div>';
       return;
     }
-    await Promise.all([loadUsers(), loadPosts(), loadStats()]);
+    await Promise.all([loadPosts(), loadStats()]);
   }
 
   // --- New post form ---
   $('new-post-btn').onclick = () => {
+    if (!currentUser){ openAuthModal(); return; }
     $('new-post-form').style.display = 'block';
     $('new-post-btn').style.display = 'none';
   };
@@ -622,15 +789,14 @@
   $('submit-post-btn').onclick = async () => {
     const title = $('new-post-title').value.trim();
     const body = $('new-post-body').value.trim();
-    const author = $('new-post-author').value;
     const tags = $('new-post-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
     $('new-post-error').textContent = '';
-    if (!title || !body || !author){
-      $('new-post-error').textContent = 'Title, body and author are required.';
+    if (!title || !body){
+      $('new-post-error').textContent = 'Title and body are required.';
       return;
     }
     try{
-      await api('POST', '/posts', { title, body, author, tags });
+      await api('POST', '/posts', { title, body, tags });
       $('new-post-title').value = '';
       $('new-post-body').value = '';
       $('new-post-tags').value = '';
@@ -643,25 +809,21 @@
     }
   };
 
-  // --- New user form ---
-  $('submit-user-btn').onclick = async () => {
-    const name = $('new-user-name').value.trim();
-    const email = $('new-user-email').value.trim();
-    $('new-user-error').textContent = '';
-    if (!name || !email){
-      $('new-user-error').textContent = 'Name and email are required.';
-      return;
-    }
-    try{
-      await api('POST', '/users', { name, email });
-      $('new-user-name').value = '';
-      $('new-user-email').value = '';
-      toast('Person added');
-      await loadUsers();
-    } catch(e){
-      $('new-user-error').textContent = e.message;
-    }
-  };
+  // --- Auth modal wiring ---
+  $('auth-modal-close').onclick = closeAuthModal;
+  $('auth-overlay').onclick = (e) => { if (e.target.id === 'auth-overlay') closeAuthModal(); };
+  document.querySelectorAll('.auth-tab').forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      $(tab.dataset.tab + '-panel').classList.add('active');
+    };
+  });
+  $('login-btn').onclick = login;
+  $('register-btn').onclick = register;
+  $('login-password').addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+  $('register-password').addEventListener('keydown', (e) => { if (e.key === 'Enter') register(); });
 
   // --- Post detail drawer ---
   async function openPost(id){
@@ -677,37 +839,38 @@
       <p>${escapeHtml(post.body)}</p>
       <h3 style="font-size:13px; color:var(--sage-deep); margin:28px 0 6px;">Comments</h3>
       <div id="comment-list"><div class="empty" style="margin-top:10px;">Loading…</div></div>
+      ${currentUser ? `
       <div class="form-card" style="margin-top:18px;">
-        <div class="row">
-          <div class="field">
-            <label>Comment as</label>
-            <select id="new-comment-author"><option value="">— select someone —</option>${users.map(u => `<option value="${u._id}">${escapeHtml(u.name)}</option>`).join('')}</select>
-          </div>
-        </div>
+        <div style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">Commenting as <b style="color:var(--sage-deep);">${escapeHtml(currentUser.name)}</b></div>
         <div class="field" style="margin-bottom:12px;"><label>Comment</label><textarea id="new-comment-text" placeholder="Add a comment…" style="min-height:54px;"></textarea></div>
         <div class="form-error" id="new-comment-error"></div>
         <div class="form-actions">
           <button class="solid-btn" id="submit-comment-btn">Add comment</button>
         </div>
       </div>
+      ` : `
+      <div class="locked-note" style="margin-top:18px;">Log in to add a comment.</div>
+      `}
     `;
-    $('submit-comment-btn').onclick = async () => {
-      const author = $('new-comment-author').value;
-      const text = $('new-comment-text').value.trim();
-      $('new-comment-error').textContent = '';
-      if (!author || !text){
-        $('new-comment-error').textContent = 'Pick a person and write a comment.';
-        return;
-      }
-      try{
-        await api('POST', `/posts/${id}/comments`, { author, text });
-        $('new-comment-text').value = '';
-        toast('Comment added');
-        loadComments(id);
-      } catch(e){
-        $('new-comment-error').textContent = e.message;
-      }
-    };
+    const submitCommentBtn = $('submit-comment-btn');
+    if (submitCommentBtn){
+      submitCommentBtn.onclick = async () => {
+        const text = $('new-comment-text').value.trim();
+        $('new-comment-error').textContent = '';
+        if (!text){
+          $('new-comment-error').textContent = 'Write a comment first.';
+          return;
+        }
+        try{
+          await api('POST', `/posts/${id}/comments`, { text });
+          $('new-comment-text').value = '';
+          toast('Comment added');
+          loadComments(id);
+        } catch(e){
+          $('new-comment-error').textContent = e.message;
+        }
+      };
+    }
     loadComments(id);
   }
 
@@ -746,6 +909,7 @@
     if (e.key === 'Enter') $('connect-btn').click();
   });
 
+  renderAccountArea();
   refreshAll();
 })();
 </script>
