@@ -3,18 +3,47 @@ const router = express.Router();
 const Post = require("../models/Post");
 const requireAuth = require("../middleware/auth");
 
-// Create post — now requires login
-router.post("/", requireAuth, async (req, res) => {
+const multer = require("multer");
+const uploadBufferToCloudinary = require("../utils/uploadToCloudinary");
+
+  
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) cb(null, true);
+    else cb(new Error("Only image files are allowed"), false);
+  }
+});
+
+// Create post — now accepts an optional image
+router.post("/", requireAuth, upload.single("image"), async (req, res) => {
   try {
+    let imageUrl = null;
+
+    if (req.file) {
+      const result = await uploadBufferToCloudinary(req.file.buffer);
+      imageUrl = result.secure_url;
+    }
+
+    const tags = req.body.tags
+      ? req.body.tags.split(",").map(t => t.trim()).filter(Boolean)
+      : [];
+
     const post = await Post.create({
-      ...req.body,
-      author: req.userId   // no longer trusting a client-supplied author field!
+      title: req.body.title,
+      body: req.body.body,
+      tags,
+      imageUrl,
+      author: req.userId
     });
+
     res.status(201).json(post);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
+
 // List posts — with optional ?author=id filter
 router.get("/", async (req, res) => {
   const filter = {};

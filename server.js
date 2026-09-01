@@ -5,6 +5,31 @@ const cors = require("cors");
 const app = express();
 
 
+////////
+
+const multer = require("multer");
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) cb(null, true);
+    else cb(new Error("Only image files are allowed"), false);
+  }
+});
+
+const uploadBufferToCloudinary = require("./utils/uploadToCloudinary");
+
+// app.post("/upload-test", upload.single("image"), async (req, res) => {
+//   try {
+//     const result = await uploadBufferToCloudinary(req.file.buffer);
+//     res.json({ url: result.secure_url });
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
+/////
+
 app.use(cors());
 app.use(express.json());
 app.use("/users", require("./routes/users"));
