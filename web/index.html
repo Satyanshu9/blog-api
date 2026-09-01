@@ -81,7 +81,7 @@
     position:relative; z-index:1;
     display:grid;
     grid-template-columns: 1fr 330px;
-    max-width: 1280px;
+    max-width: 1080px; /* narrowed slightly for better feed reading */
     margin: 0 auto;
     min-height: calc(100vh - 66px);
     gap: 0;
@@ -91,14 +91,10 @@
 
   .section-head{
     display:flex; align-items:center; justify-content:space-between;
-    margin-bottom:18px; gap:12px; flex-wrap:wrap;
-  }
-  .section-head .eyebrow{
-    font-size:12px; letter-spacing:0.04em; color:var(--sage-deep); display:block; margin-bottom:4px; font-weight:700;
+    margin-bottom:24px; gap:12px; flex-wrap:wrap;
   }
   .section-head h2{ font-size:28px; }
-  .section-head .count{ color:var(--text-dim); font-size:12.5px; }
-
+  
   .head-controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 
   .sort-select{
@@ -121,29 +117,46 @@
   .solid-btn:hover{ background: var(--sage-deep); transform: translateY(-1px); }
   .solid-btn:disabled, .ghost-btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
 
-  /* ---------- Post cards ---------- */
-  .post-list{ display:flex; flex-direction:column; gap:14px; }
+  /* ---------- Social Feed Post Cards ---------- */
+  .post-list{ display:flex; flex-direction:column; gap:28px; }
   .post-card{
     background: var(--surface);
     border:1px solid var(--line-soft);
     border-radius: var(--radius-lg);
-    padding: 20px 22px;
     cursor:pointer;
     box-shadow: var(--shadow-sm);
     transition: box-shadow .18s, transform .12s;
+    overflow: hidden; /* For edge-to-edge images */
   }
   .post-card:hover{ box-shadow: var(--shadow-md); transform: translateY(-2px); }
   .post-card:active{ transform: translateY(0); }
-  .post-card .idx{
-    font-family:'JetBrains Mono', monospace; color:var(--text-dim); font-size:11px;
+  
+  /* Social Header */
+  .post-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 20px;
   }
-  .post-card h3{ font-size:19px; margin:6px 0 8px; font-weight:600; }
-  .post-card .meta{
-    display:flex; align-items:center; gap:9px; flex-wrap:wrap;
-    font-size:12.5px; color:var(--text-muted); margin-bottom:10px;
+  .post-meta-text { display: flex; flex-direction: column; font-size: 14px; }
+  .post-meta-text b { color: var(--text); font-weight: 700; }
+  .post-meta-text span { color: var(--text-muted); font-size: 12px; }
+  
+  /* Edge to Edge Image */
+  .feed-image {
+    width: 100%;
+    max-height: 550px;
+    object-fit: cover;
+    border-top: 1px solid var(--line-soft);
+    border-bottom: 1px solid var(--line-soft);
+    background: var(--surface-soft);
+    display: block;
   }
-  .post-card .meta b{ color:var(--text); font-weight:700; }
-  .post-card .excerpt{ font-size:14px; color:var(--text-muted); line-height:1.65; }
+
+  /* Post Body */
+  .post-content-wrap { padding: 16px 20px 22px; }
+  .post-content-wrap h3{ font-size:20px; margin:0 0 8px; font-weight:700; }
+  .post-content-wrap .excerpt{ font-size:14.5px; color:var(--text-muted); line-height:1.6; }
+  
+  .tags-row { margin-top: 12px; display:flex; gap:6px; flex-wrap:wrap; }
   .tag-pill{
     font-size:11px; color:var(--rose-deep); font-weight:700;
     background: rgba(217,143,146,0.14); border:1px solid rgba(217,143,146,0.28);
@@ -159,34 +172,36 @@
   /* ---------- Forms ---------- */
   .form-card{
     background: var(--surface); border:1px solid var(--line-soft); border-radius: var(--radius-lg);
-    padding: 18px; margin-bottom: 24px; box-shadow: var(--shadow-sm);
+    padding: 22px; margin-bottom: 30px; box-shadow: var(--shadow-sm);
   }
   .field label{
-    display:block; font-size:11.5px; font-weight:700;
+    display:block; font-size:12px; font-weight:700;
     color: var(--text-muted); margin-bottom:6px;
   }
   .field input, .field textarea, .field select{
     width:100%; background: var(--surface-soft); border:1.5px solid var(--line); color:var(--text);
-    border-radius: var(--radius-sm); padding:9px 12px; font-size:13.5px;
+    border-radius: var(--radius-sm); padding:10px 12px; font-size:14px;
+  }
+  .field input[type="file"] {
+    padding: 8px; background: transparent; border: 1.5px dashed var(--line); cursor: pointer;
   }
   .field input:focus, .field textarea:focus, .field select:focus{ border-color: var(--sage); }
-  .field textarea{ resize:vertical; min-height:76px; font-family:inherit; }
-  .field{ margin-bottom:12px; }
+  .field textarea{ resize:vertical; min-height:80px; font-family:inherit; }
+  .field{ margin-bottom:16px; }
   .field:last-of-type{ margin-bottom: 0; }
-  .form-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
+  .form-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
   .form-error{ color:var(--rose-deep); font-size:12.5px; margin-top:8px; font-weight:600; }
 
   .locked-note{
-    font-size:12.5px; color:var(--text-dim); background: var(--surface-soft);
-    border:1px dashed var(--line); border-radius: var(--radius-md); padding:12px 14px; margin-bottom:16px;
+    font-size:13px; color:var(--text-dim); background: var(--surface-soft);
+    border:1px dashed var(--line); border-radius: var(--radius-md); padding:14px; margin-bottom:16px;
   }
-  .locked-note button{ background:none; border:none; color:var(--sage-deep); font-weight:700; cursor:pointer; padding:0; font-size:inherit; text-decoration:underline; }
 
   /* ---------- Modals (auth + reading) ---------- */
   .modal-overlay{
-    position: fixed; inset:0; background: rgba(74,60,42,0.32);
+    position: fixed; inset:0; background: rgba(74,60,42,0.4);
     z-index: 40; display:none; align-items:center; justify-content:center;
-    backdrop-filter: blur(3px); padding: 20px;
+    backdrop-filter: blur(4px); padding: 20px;
   }
   .modal-overlay.open{ display:flex; }
   .modal-box{
@@ -195,13 +210,13 @@
     padding: 26px 26px 22px;
   }
   .modal-box h2{ font-size:22px; margin-bottom:4px; }
-  .modal-sub{ font-size:12.5px; color:var(--text-muted); margin-bottom:18px; }
+  .modal-sub{ font-size:13px; color:var(--text-muted); margin-bottom:18px; }
   .modal-close{
-    float:right; background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer;
+    float:right; background:none; border:none; color:var(--text-dim); font-size:22px; cursor:pointer;
   }
   .auth-tabs{ display:flex; gap:6px; margin-bottom:18px; background: var(--surface-soft); padding:4px; border-radius:999px; }
   .auth-tab{
-    flex:1; text-align:center; padding:7px 0; border-radius:999px; font-size:12.5px; font-weight:700;
+    flex:1; text-align:center; padding:7px 0; border-radius:999px; font-size:13px; font-weight:700;
     color: var(--text-muted); cursor:pointer; transition: all .15s;
   }
   .auth-tab.active{ background: var(--sage); color:#fff; }
@@ -210,7 +225,7 @@
 
   .read-box{
     background: var(--bg); border:1px solid var(--line); border-radius: var(--radius-lg);
-    width: 100%; max-width: 740px; max-height: 80vh; box-shadow: var(--shadow-md);
+    width: 100%; max-width: 680px; max-height: 85vh; box-shadow: var(--shadow-md);
     display:flex; flex-direction:column; overflow:hidden;
   }
   .read-head{
@@ -219,38 +234,47 @@
     background: var(--surface);
   }
   .read-head h2{ font-size:24px; line-height:1.3; }
-  .read-body{ padding: 26px 30px 34px; max-height: 80vh;  overflow-y:auto; }
-  .read-body .byline{ font-size:12.5px; color:var(--text-muted); margin-bottom:18px; }
+  .read-body{ padding: 26px 30px 34px; max-height: 85vh;  overflow-y:auto; }
+  
+  .read-hero-image {
+    width: calc(100% + 60px);
+    margin: -26px -30px 24px;
+    max-height: 500px;
+    object-fit: cover;
+    display: block;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .read-body .byline{ font-size:13px; color:var(--text-muted); margin-bottom:20px; display:flex; align-items:center; gap:10px;}
   .read-body .byline b{ color:var(--text); }
-  .read-body p.content{ line-height:1.85; font-size:15.5px; color: var(--text-muted); white-space:pre-wrap; }
-  .read-body .tags-row{ margin-top:16px; display:flex; gap:6px; flex-wrap:wrap; }
+  .read-body p.content{ line-height:1.8; font-size:16px; color: var(--text); white-space:pre-wrap; }
 
-  .comment{ border-bottom:1px solid var(--line-soft); padding: 14px 0; }
-  .comment .who{ font-size:12.5px; color:var(--sage-deep); font-weight:700; margin-bottom:4px; }
-  .comment .txt{ font-size:14px; color:var(--text); line-height:1.6; }
+  .comment{ border-bottom:1px solid var(--line-soft); padding: 16px 0; }
+  .comment .who{ font-size:13px; color:var(--sage-deep); font-weight:700; margin-bottom:6px; }
+  .comment .txt{ font-size:14.5px; color:var(--text); line-height:1.6; }
 
-  /* ---------- Stats ---------- */
+  /* ---------- Stats / Top Authors ---------- */
   .stats-table{ width:100%; border-collapse: collapse; margin-top:12px; }
   .stats-table th{
-    text-align:left; font-size:11px; font-weight:700;
-    color:var(--text-dim); padding: 6px 10px; border-bottom:1px solid var(--line);
+    text-align:left; font-size:12px; font-weight:700;
+    color:var(--text-dim); padding: 8px 10px; border-bottom:1px solid var(--line);
   }
-  .stats-table td{ padding: 11px 10px; border-bottom:1px solid var(--line-soft); font-size:13.5px; }
+  .stats-table td{ padding: 12px 10px; border-bottom:1px solid var(--line-soft); font-size:14px; }
   .stats-table tr:last-child td{ border-bottom:none; }
-  .rank{ font-family:'JetBrains Mono',monospace; color: var(--rose-deep); font-size:12px; font-weight:700; }
-  .bar-wrap{ background: var(--surface-soft); border-radius:6px; height:6px; margin-top:5px; overflow:hidden; }
+  .rank{ font-family:'JetBrains Mono',monospace; color: var(--rose-deep); font-size:13px; font-weight:700; }
+  .bar-wrap{ background: var(--surface-soft); border-radius:6px; height:6px; margin-top:6px; overflow:hidden; }
   .bar{ height:100%; background: linear-gradient(90deg, var(--sage), var(--honey)); border-radius:6px; }
 
   .side-title{
-    font-size:15px; color:var(--text); font-weight:600;
-    margin-bottom:4px; font-family:'Fraunces', serif;
+    font-size:18px; color:var(--text); font-weight:600;
+    margin-bottom:16px; font-family:'Fraunces', serif;
   }
   .side .eyebrow{
-    font-size:12px; letter-spacing:0.04em; color:var(--sage-deep); display:block; margin-bottom:4px; font-weight:700;
+    font-size:12px; letter-spacing:0.04em; color:var(--sage-deep); display:block; margin-bottom:6px; font-weight:700;
   }
   .side-card{
     background: var(--surface); border:1px solid var(--line-soft); border-radius: var(--radius-lg);
-    padding: 18px; box-shadow: var(--shadow-sm);
+    padding: 22px; box-shadow: var(--shadow-sm);
   }
 
   .toast{
@@ -272,12 +296,12 @@
   }
   .profile-chip:hover{ box-shadow: var(--shadow-md); }
   .avatar{
-    width:26px; height:26px; border-radius:50%; flex-shrink:0;
+    width:32px; height:32px; border-radius:50%; flex-shrink:0;
     background: linear-gradient(160deg, var(--rose), var(--honey));
     display:flex; align-items:center; justify-content:center;
-    color:#fff; font-weight:700; font-size:11.5px; font-family:'Fraunces';
+    color:#fff; font-weight:700; font-size:13px; font-family:'Fraunces';
   }
-  .profile-chip span{ font-size:12.5px; font-weight:700; color:var(--text); }
+  .profile-chip span{ font-size:13.5px; font-weight:700; color:var(--text); }
   .profile-chip svg{ opacity:.5; }
 
   .profile-menu{
@@ -315,7 +339,6 @@
   <div class="brand">
     <div class="leaf">🌿</div>
     <h1>The Nook</h1>
-    <span class="tag">a cozy little blog</span>
   </div>
   <div id="account-area"></div>
 </div>
@@ -323,28 +346,33 @@
 <div class="layout">
   <div class="main">
 
-    <!-- POSTS -->
+    <!-- FEED HEADER -->
     <div class="section-head">
-      <div>
-        <span class="eyebrow">From the notebook</span>
-        <h2>Posts</h2>
-      </div>
+      <h2>Your Feed</h2>
       <div class="head-controls">
-        <span class="count" id="post-count">0 total</span>
         <select class="sort-select" id="sort-select">
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
-          <option value="author">By author (A–Z)</option>
+          <option value="author">By author</option>
         </select>
-        <button class="solid-btn" id="new-post-btn">+ Write a post</button>
+        <button class="solid-btn" id="new-post-btn">+ New Post</button>
       </div>
     </div>
 
+    <!-- POST COMPOSER -->
     <div class="form-card" id="new-post-form" style="display:none;">
-      <div class="field"><label>Title</label><input id="new-post-title" placeholder="On calibration drift"></div>
-      <div class="field"><label>Body</label><textarea id="new-post-body" placeholder="Write the post…"></textarea></div>
-      <div class="field"><label>Tags (comma separated)</label><input id="new-post-tags" placeholder="intro, notes"></div>
-      <div style="font-size:12px; color:var(--text-dim);">Posting as <b id="posting-as-name" style="color:var(--sage-deep);"></b></div>
+      <div class="field"><label>Title</label><input id="new-post-title" placeholder="What's on your mind?"></div>
+      <div class="field"><label>Caption / Body</label><textarea id="new-post-body" placeholder="Write something..."></textarea></div>
+      
+      <!-- NEW: Image Upload Field -->
+      <div class="field">
+        <label>Add a Photo (optional)</label>
+        <input type="file" id="new-post-image" accept="image/*">
+        <img id="image-preview" style="display:none; width:100%; border-radius:8px; margin-top:10px; border:1px solid var(--line-soft);">
+      </div>
+
+      <div class="field"><label>Tags (comma separated)</label><input id="new-post-tags" placeholder="life, updates"></div>
+      <div style="font-size:12.5px; color:var(--text-dim);">Posting as <b id="posting-as-name" style="color:var(--sage-deep);"></b></div>
       <div class="form-error" id="new-post-error"></div>
       <div class="form-actions">
         <button class="ghost-btn" id="cancel-post-btn">Cancel</button>
@@ -353,14 +381,15 @@
     </div>
 
     <div class="post-list" id="post-list">
-      <div class="empty">Loading posts…</div>
+      <div class="empty">Loading feed…</div>
     </div>
 
   </div>
 
+  <!-- SIDEBAR -->
   <div class="side">
-    <span class="eyebrow">Who's been busy</span>
-    <h2 class="side-title" style="font-size:22px; margin-bottom:14px;">Top authors</h2>
+    <span class="eyebrow">Discover</span>
+    <h2 class="side-title">Top authors</h2>
     <div class="side-card">
       <div id="stats-wrap"><div class="empty">No data yet.</div></div>
     </div>
@@ -372,7 +401,7 @@
   <div class="modal-box">
     <button class="modal-close" id="auth-modal-close">&times;</button>
     <h2>Welcome</h2>
-    <div class="modal-sub">Log in or create an account to write.</div>
+    <div class="modal-sub">Log in or create an account to share.</div>
     <div class="auth-tabs">
       <div class="auth-tab active" data-tab="login">Log in</div>
       <div class="auth-tab" data-tab="register">Sign up</div>
@@ -428,20 +457,20 @@
     try{
       localStorage.setItem('nook_token', token || '');
       localStorage.setItem('nook_user', JSON.stringify(currentUser || null));
-    } catch(e){ /* storage unavailable — session just won't survive reload */ }
+    } catch(e){ }
   }
   function loadSession(){
     try{
       const t = localStorage.getItem('nook_token');
       const u = localStorage.getItem('nook_user');
       if (t && u){ token = t; currentUser = JSON.parse(u); }
-    } catch(e){ /* ignore */ }
+    } catch(e){ }
   }
   function clearSession(){
     try{
       localStorage.removeItem('nook_token');
       localStorage.removeItem('nook_user');
-    } catch(e){ /* ignore */ }
+    } catch(e){ }
   }
 
   function toast(msg, isErr){
@@ -453,16 +482,17 @@
     t._timer = setTimeout(()=> t.classList.remove('show'), 2600);
   }
 
-  async function api(method, path, body){
+  // MODIFIED API CALLER to support FormData
+  async function api(method, path, body, isFormData = false){
     const headers = {};
-    if (body) headers['Content-Type'] = 'application/json';
+    if (body && !isFormData) headers['Content-Type'] = 'application/json';
     if (token) headers['Authorization'] = 'Bearer ' + token;
     let res, data;
     try{
       res = await fetch(API_BASE + path, {
         method,
         headers: Object.keys(headers).length ? headers : undefined,
-        body: body ? JSON.stringify(body) : undefined
+        body: body ? (isFormData ? body : JSON.stringify(body)) : undefined
       });
       const text = await res.text();
       try{ data = text ? JSON.parse(text) : null; } catch(e){ data = text; }
@@ -681,26 +711,37 @@
   }
 
   function renderPosts(){
-    $('post-count').textContent = posts.length + ' total';
     const list = $('post-list');
     const sorted = getSortedPosts();
     if (!sorted.length){
       list.innerHTML = '<div class="empty">No posts yet — write the first one.</div>';
       return;
     }
-    list.innerHTML = sorted.map((p, i) => `
+    // NEW SOCIAL MEDIA FEED LAYOUT
+    list.innerHTML = sorted.map(p => {
+      const authorName = escapeHtml(p.author && p.author.name || 'unknown');
+      const authorInitial = authorName.charAt(0).toUpperCase();
+      
+      return `
       <div class="post-card" data-id="${p._id}">
-        <span class="idx">#${String(i+1).padStart(2,'0')}</span>
-        <h3>${escapeHtml(p.title)}</h3>
-        <div class="meta">
-          <span>by <b>${escapeHtml(p.author && p.author.name || 'unknown')}</b></span>
-          <span>·</span>
-          <span>${timeAgo(p.createdAt)}</span>
-          ${p.tags && p.tags.length ? '<span>·</span>' + p.tags.map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join('') : ''}
+        <div class="post-header">
+          <div class="avatar">${authorInitial}</div>
+          <div class="post-meta-text">
+            <b>${authorName}</b>
+            <span>${timeAgo(p.createdAt)}</span>
+          </div>
         </div>
-        <div class="excerpt">${escapeHtml((p.body||'').slice(0,160))}${p.body && p.body.length > 160 ? '…' : ''}</div>
+        
+        ${p.imageUrl ? `<img src="${escapeHtml(p.imageUrl)}" class="feed-image" loading="lazy">` : ''}
+        
+        <div class="post-content-wrap">
+          <h3>${escapeHtml(p.title)}</h3>
+          <div class="excerpt">${escapeHtml((p.body||'').slice(0,200))}${p.body && p.body.length > 200 ? '…' : ''}</div>
+          ${p.tags && p.tags.length ? `<div class="tags-row">${p.tags.map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+        </div>
       </div>
-    `).join('');
+    `}).join('');
+    
     list.querySelectorAll('.post-card').forEach(card => {
       card.onclick = () => openPost(card.dataset.id);
     });
@@ -754,18 +795,54 @@
     $('new-post-form').style.display = 'none';
     $('new-post-btn').style.display = 'inline-block';
     $('new-post-error').textContent = '';
+    $('image-preview').style.display = 'none';
+    $('image-preview').src = '';
+    $('new-post-image').value = '';
   };
+  
+  // LIVE IMAGE PREVIEW
+  $('new-post-image').onchange = function() {
+    const file = this.files[0];
+    const preview = $('image-preview');
+    if (file) {
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = 'block';
+    } else {
+      preview.style.display = 'none';
+      preview.src = '';
+    }
+  };
+
+  // MULTIPART FORM DATA SUBMISSION
   $('submit-post-btn').onclick = async () => {
     const title = $('new-post-title').value.trim();
     const body = $('new-post-body').value.trim();
     const tags = $('new-post-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+    const imageFile = $('new-post-image').files[0];
+
     $('new-post-error').textContent = '';
     if (!title || !body){
       $('new-post-error').textContent = 'Title and body are required.';
       return;
     }
+
+    const btn = $('submit-post-btn');
+    const originalText = btn.textContent;
+    btn.textContent = 'Publishing...';
+    btn.disabled = true;
+
     try{
-      await api('POST', '/posts', { title, body, tags });
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('body', body);
+      formData.append('tags', tags.join(',')); // API route splits on comma
+      
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
+
+      await api('POST', '/posts', formData, true); // true = isFormData
+      
       $('new-post-title').value = '';
       $('new-post-body').value = '';
       $('new-post-tags').value = '';
@@ -775,6 +852,9 @@
       await loadStats();
     } catch(e){
       $('new-post-error').textContent = e.message;
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
     }
   };
 
@@ -784,12 +864,24 @@
     if (!post) return;
     $('read-title').textContent = post.title;
     $('read-overlay').classList.add('open');
+    
+    const authorName = escapeHtml(post.author && post.author.name || 'unknown');
+    const authorInitial = authorName.charAt(0).toUpperCase();
+
     $('read-body').innerHTML = `
-      <div class="byline">by <b>${escapeHtml(post.author && post.author.name || 'unknown')}</b> · ${timeAgo(post.createdAt)}</div>
+      <div class="byline">
+        <div class="avatar">${authorInitial}</div> 
+        <div>by <b>${authorName}</b> · ${timeAgo(post.createdAt)}</div>
+      </div>
+      
+      ${post.imageUrl ? `<img src="${escapeHtml(post.imageUrl)}" class="read-hero-image">` : ''}
+      
       <p class="content">${escapeHtml(post.body)}</p>
       ${post.tags && post.tags.length ? `<div class="tags-row">${post.tags.map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
-      <h3 style="font-size:14px; color:var(--sage-deep); margin:30px 0 8px;">Comments</h3>
+      
+      <h3 style="font-size:16px; color:var(--sage-deep); margin:30px 0 8px;">Comments</h3>
       <div id="comment-list"><div class="empty" style="margin-top:10px;">Loading…</div></div>
+      
       ${currentUser ? `
         <div class="form-card" style="margin-top:18px;">
           <div style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">Commenting as <b style="color:var(--sage-deep);">${escapeHtml(currentUser.name)}</b></div>
@@ -861,7 +953,6 @@
   async function boot(){
     loadSession();
     if (token){
-      // verify the stored token is still valid and refresh the user's data
       try{
         const user = await api('GET', '/users/me');
         currentUser = user;
