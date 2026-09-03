@@ -361,6 +361,12 @@
       <div class="empty">Loading posts…</div>
     </div>
 
+    <div id="pagination" style="display:none; justify-content:center; align-items:center; gap:16px; margin-top:26px;">
+      <button class="ghost-btn" id="prev-page-btn">← Previous</button>
+      <span id="page-indicator" style="font-size:12.5px; color:var(--text-dim); font-weight:600;"></span>
+      <button class="ghost-btn" id="next-page-btn">Next →</button>
+    </div>
+
   </div>
 
   <div class="side">
@@ -676,27 +682,27 @@
   }
 
   // ---------- posts ----------
-  function getSortedPosts(){
-    const mode = $('sort-select').value;
-    const copy = [...posts];
-    if (mode === 'oldest') copy.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
-    else if (mode === 'author') copy.sort((a,b) => (a.author && a.author.name || '').localeCompare(b.author && b.author.name || ''));
-    else copy.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-    return copy;
-  }
+  let currentPage = 1;
+  let totalPages = 1;
+  let totalCount = 0;
 
   function renderPosts(){
-    $('post-count').textContent = posts.length + ' total';
+    $('post-count').textContent = totalCount + ' total';
     const list = $('post-list');
-    const sorted = getSortedPosts();
-    if (!sorted.length){
+    if (!posts.length){
       list.innerHTML = '<div class="empty">No posts yet — write the first one.</div>';
+      $('pagination').style.display = 'none';
       return;
     }
-    list.innerHTML = sorted.map((p, i) => `
+    const startIdx = (currentPage - 1) * 10;
+    list.innerHTML = posts.map((p, i) => `
       <div class="post-card" data-id="${p._id}">
-        <span class="idx">#${String(i+1).padStart(2,'0')}</span>
-        ${p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%; border-radius:14px; margin:10px 0; max-height:280px; object-fit:cover;" loading="lazy">` : ''}
+        <span class="idx">#${String(startIdx + i + 1).padStart(2,'0')}</span>
+        ${p.imageThumbUrl ? `
+          <div style="width:100%; max-height:280px; overflow:hidden; border-radius:14px; margin:10px 0; background:var(--surface-soft); display:flex; align-items:center; justify-content:center;">
+            <img src="${p.imageThumbUrl}" style="width:100%; height:100%; object-fit:contain;" loading="lazy">
+          </div>
+        ` : ''}
         <h3>${escapeHtml(p.title)}</h3>
         <div class="meta">
           <span>by <b>${escapeHtml(p.author && p.author.name || 'unknown')}</b></span>
@@ -710,13 +716,33 @@
     list.querySelectorAll('.post-card').forEach(card => {
       card.onclick = () => openPost(card.dataset.id);
     });
+    renderPagination();
   }
-  $('sort-select').onchange = renderPosts;
 
-  async function loadPosts(){
+  function renderPagination(){
+    const pag = $('pagination');
+    if (totalPages <= 1){ pag.style.display = 'none'; return; }
+    pag.style.display = 'flex';
+    $('page-indicator').textContent = `Page ${currentPage} of ${totalPages}`;
+    $('prev-page-btn').disabled = currentPage <= 1;
+    $('next-page-btn').disabled = currentPage >= totalPages;
+  }
+
+  $('sort-select').onchange = () => loadPosts(1);
+  $('prev-page-btn').onclick = () => { if (currentPage > 1) loadPosts(currentPage - 1); };
+  $('next-page-btn').onclick = () => { if (currentPage < totalPages) loadPosts(currentPage + 1); };
+
+  async function loadPosts(page){
+    page = page || currentPage;
+    const sort = $('sort-select').value;
     try{
-      posts = await api('GET', '/posts');
+      const data = await api('GET', `/posts?page=${page}&sort=${sort}`);
+      posts = data.posts;
+      currentPage = data.page;
+      totalPages = data.totalPages;
+      totalCount = data.totalCount;
       renderPosts();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch(e){
       $('post-list').innerHTML = '<div class="empty">Could not load posts. The server may be waking up — try again in a moment.</div>';
     }
@@ -803,7 +829,7 @@
       $('new-post-preview').style.display = 'none';
       $('cancel-post-btn').click();
       toast('Post published 🌿');
-      await loadPosts();
+      await loadPosts(1);
       await loadStats();
     } catch(e){
       $('new-post-error').textContent = e.message;
@@ -818,7 +844,7 @@
     $('read-overlay').classList.add('open');
     $('read-body').innerHTML = `
       <div class="byline">by <b>${escapeHtml(post.author && post.author.name || 'unknown')}</b> · ${timeAgo(post.createdAt)}</div>
-      ${post.imageUrl ? `<img src="${post.imageUrl}" style="width:100%; border-radius:16px; margin-bottom:18px; max-height:420px; object-fit:cover;">` : ''}
+      ${post.imageUrl ? `<img src="${post.imageUrl}" style="width:100%; height:auto; max-height:70vh; border-radius:16px; margin-bottom:18px; object-fit:contain; background:var(--surface-soft);">` : ''}
       <p class="content">${escapeHtml(post.body)}</p>
       ${post.tags && post.tags.length ? `<div class="tags-row">${post.tags.map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
       <h3 style="font-size:14px; color:var(--sage-deep); margin:30px 0 8px;">Comments</h3>

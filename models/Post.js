@@ -6,6 +6,7 @@ const postSchema = new mongoose.Schema({
   author: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   tags: [String],
   imageUrl: { type: String, default: null },   // ← new
+  imageThumbUrl: { type: String, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 

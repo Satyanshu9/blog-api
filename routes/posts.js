@@ -5,8 +5,8 @@ const requireAuth = require("../middleware/auth");
 
 const multer = require("multer");
 const uploadBufferToCloudinary = require("../utils/uploadToCloudinary");
+const mongoose = require("mongoose");
 
-  
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -24,6 +24,17 @@ router.post("/", requireAuth, upload.single("image"), async (req, res) => {
     if (req.file) {
       const result = await uploadBufferToCloudinary(req.file.buffer);
       imageUrl = result.secure_url;
+
+      if (result.bytes > 500 * 1024) {
+        imageThumbUrl = cloudinary.url(result.public_id, {
+          quality: "auto:eco",
+          fetch_format: "auto",
+          width: 900,
+          crop: "limit"
+        });
+      } else {
+        imageThumbUrl = imageUrl; // already small — no point compressing further
+      }
     }
 
     const tags = req.body.tags
@@ -45,12 +56,55 @@ router.post("/", requireAuth, upload.single("image"), async (req, res) => {
 });
 
 // List posts — with optional ?author=id filter
-router.get("/", async (req, res) => {
-  const filter = {};
-  if (req.query.author) filter.author = req.query.author;
 
-  const posts = await Post.find(filter).populate("author", "name email");
-  res.json(posts);
+router.get("/", async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = 10;
+    const skip = (page - 1) * limit;
+    const sort = req.query.sort || "newest";
+
+    const match = {};
+    if (req.query.author) match.author = new mongoose.Types.ObjectId(req.query.author);
+
+    let sortStage = { createdAt: -1 };
+    if (sort === "oldest") sortStage = { createdAt: 1 };
+    if (sort === "author") sortStage = { "authorInfo.name": 1 };
+
+    const result = await Post.aggregate([
+      { $match: match },
+      { $lookup: { from: "users", localField: "author", foreignField: "_id", as: "authorInfo" } },
+      { $unwind: "$authorInfo" },
+      { $sort: sortStage },
+      {
+        $facet: {
+          data: [
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $project: {
+                title: 1, body: 1, tags: 1, createdAt: 1,
+                imageUrl: 1, imageThumbUrl: 1,
+                author: { _id: "$authorInfo._id", name: "$authorInfo.name", email: "$authorInfo.email" }
+              }
+            }
+          ],
+          totalCount: [{ $count: "count" }]
+        }
+      }
+    ]);
+
+    const totalCount = result[0].totalCount[0]?.count || 0;
+
+    res.json({
+      posts: result[0].data,
+      totalCount,
+      page,
+      totalPages: Math.max(Math.ceil(totalCount / limit), 1)
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // Get one post (populated)
